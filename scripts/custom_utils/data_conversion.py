@@ -9,5 +9,5 @@ def topic_to_image(msg):
 
 def topic_to_depth(msg):
     depth_raw = np.frombuffer(msg.data, dtype=np.uint16)
-    depth = depth_raw.reshape((msg.height, msg.width, 1))
+    depth = depth_raw.reshape((msg.height, msg.width))
     return depth
