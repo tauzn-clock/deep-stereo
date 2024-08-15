@@ -27,3 +27,4 @@ RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 
 RUN git clone --recursive https://github.com/tauzn-clock/deep-stereo /depth-stereo
 WORKDIR /depth-stereo
+RUN pip3 install -r requirements.txt
