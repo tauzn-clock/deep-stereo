@@ -25,6 +25,6 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 
-RUN git clone --recursive https://github.com/tauzn-clock/deep-stereo /depth-stereo
-WORKDIR /depth-stereo
+RUN git clone --recursive https://github.com/tauzn-clock/deep-stereo /ws
+WORKDIR /ws
 RUN pip3 install -r requirements.txt
