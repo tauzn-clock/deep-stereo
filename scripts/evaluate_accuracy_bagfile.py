@@ -1,9 +1,9 @@
 import os
 import cv2
 import torch
+import time
 import numpy as np
 import rosbag
-import matplotlib.pyplot as plt
 import custom_utils.data_conversion as data_conversion
 import custom_utils.depth_anything_interface as depth_anything_interface
 
@@ -30,6 +30,10 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/camera_info"]):
 
 depth = None
 img = None
+prev_time = time.time()
+
+# Store accuracy per frame
+data = []
 
 for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/camera/depth/image_raw"]):
     if topic == "/camera/color/image_raw":
@@ -73,8 +77,17 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
         pred_depth, _ = depth_anything_interface.get_pred_depth(depth, est_depth)
         depth_anything_depth = data_conversion.interpolate_depth(pred_depth,corners.reshape(-1, 2))
     
-        print("Camera vs Raw", abs(raw_depth - camera_estimated_depth).mean())
-        print("Camera vs Depth Anything", abs(depth_anything_depth - camera_estimated_depth).mean())
+        diff_raw = abs(raw_depth - camera_estimated_depth)
+        diff_depth_anything = abs(depth_anything_depth - camera_estimated_depth)
+    
+        # Store data
+        data.append((time.time() - prev_time, diff_raw.mean(), diff_raw.max(), diff_raw.std(), diff_depth_anything.mean(), diff_depth_anything.max(), diff_depth_anything.std()))
     
         depth = None
         img = None
+        prev_time = time.time()
+
+# Write data to csv
+
+data = np.array(data)
+np.savetxt(os.path.join(DATAFILE, "accuracy.csv"), data, delimiter=",", header="time,mean_raw,max_raw,std_raw,mean_depth_anything,max_depth_anything,std_depth_anything", comments='')
