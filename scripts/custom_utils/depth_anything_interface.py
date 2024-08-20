@@ -1,3 +1,8 @@
+#!/usr/bin/python3
+
+import sys
+sys.path.append("/Depth-Anything-V2")
+
 import os
 os.chdir("/Depth-Anything-V2")
 #print(os.getcwd())
