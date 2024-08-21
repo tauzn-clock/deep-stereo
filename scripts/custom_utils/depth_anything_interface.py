@@ -55,9 +55,10 @@ def estimated_depth_model(x, a, b, c):
 def get_pred_depth(depth, est_depth, CAMERA_DATA, verbose=False):
     depth_flatten = depth.flatten()
     est_depth_flatten = est_depth.flatten()
-    #Ignore pixels with 0 depth in depth image
-    est_depth_flatten = est_depth_flatten[depth_flatten!=CAMERA_DATA["min_range"]]
-    depth_flatten = depth_flatten[depth_flatten!=CAMERA_DATA["min_range"]]
+    est_depth_flatten = est_depth_flatten[depth_flatten>=CAMERA_DATA["min_acc_range"]]
+    depth_flatten = depth_flatten[depth_flatten>=CAMERA_DATA["min_acc_range"]]
+    est_depth_flatten = est_depth_flatten[depth_flatten<=CAMERA_DATA["max_acc_range"]]
+    depth_flatten = depth_flatten[depth_flatten<=CAMERA_DATA["max_acc_range"]]
 
     popt, pcov = curve_fit(estimated_depth_model, est_depth_flatten, depth_flatten)
     a_opt, b_opt, c_opt = popt
