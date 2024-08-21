@@ -14,6 +14,8 @@ import numpy as np
 from depth_anything_v2.dpt import DepthAnythingV2
 from scipy.optimize import curve_fit
 
+# These functions aim to fit based on disparity map
+
 def get_model(DEVICE, encoder='vitl'):
     model_configs = {
         'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
@@ -33,13 +35,12 @@ def get_model(DEVICE, encoder='vitl'):
 def estimated_depth_model(x, a, b, c):
     return (a / (x + b)) + c
 
-def get_pred_depth(depth, est_depth, verbose= False):
-    
+def get_pred_depth(depth, est_depth, CAMERA_DATA, verbose=False):
     depth_flatten = depth.flatten()
     est_depth_flatten = est_depth.flatten()
     #Ignore pixels with 0 depth in depth image
-    est_depth_flatten = est_depth_flatten[depth_flatten!=0]
-    depth_flatten = depth_flatten[depth_flatten!=0]
+    est_depth_flatten = est_depth_flatten[depth_flatten!=CAMERA_DATA["min_range"]]
+    depth_flatten = depth_flatten[depth_flatten!=CAMERA_DATA["min_range"]]
 
     popt, pcov = curve_fit(estimated_depth_model, est_depth_flatten, depth_flatten)
     a_opt, b_opt, c_opt = popt
