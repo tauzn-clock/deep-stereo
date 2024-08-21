@@ -9,12 +9,10 @@ def topic_to_image(msg):
     img = img_raw.reshape((msg.height, msg.width, 3))
     return img
 
-def topic_to_depth(msg, camera_model="gemini_2xl"):
-    range_limits = {"gemini_2xl" : [0.4, 20],
-                    "gemini_2l" : [0.25, 10]}
+def topic_to_depth(msg, CAMERA_DATA):
     depth_raw = np.frombuffer(msg.data, dtype=np.uint16)
     depth = depth_raw.reshape((msg.height, msg.width))
-    depth = depth / (2**16-1) * (range_limits[camera_model][1]-range_limits[camera_model][0]) + range_limits[camera_model][0] 
+    depth = depth / (2**16-1) * (CAMERA_DATA["max_range"]- CAMERA_DATA["min_range"]) + CAMERA_DATA["min_range"]
     return depth
 
 def interpolate_depth(arr, coords):
