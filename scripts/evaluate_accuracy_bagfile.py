@@ -2,18 +2,24 @@ import os
 import cv2
 import torch
 import time
+import json
 import numpy as np
 import rosbag
 import custom_utils.data_conversion as data_conversion
 import custom_utils.depth_anything_interface as depth_anything_interface
 
-DATAFILE = "/scratchdata/stationary"
+MODEL_TYPE = "base"
+ENCODER = "vitl"
+DATAFILE = "/scratchdata/moving_2L"
+CAMERA_JSON = "/scratchdata/gemini_2l.json"
+MODEL_PATH = f"/scratchdata/depth_anything_v2_{ENCODER}.pth"
+with open(CAMERA_JSON, 'r') as f:
+    CAMERA_DATA = json.load(f)
 FRAME_INDEX = 0
-SQUARE_SIZE = 25 #mm
+SQUARE_SIZE = 24 #mm
 CHECKERBOARD = (8,6)
 DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
-MODEL = depth_anything_interface.get_model(DEVICE)
-
+MODEL = depth_anything_interface.get_model(DEVICE, MODEL_PATH, model_type = MODEL_TYPE, encoder=ENCODER)
 # Open bag file
 bag_file_path = os.path.join(DATAFILE, "raw.bag")
 bag = rosbag.Bag(bag_file_path)
@@ -39,7 +45,7 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
     if topic == "/camera/color/image_raw":
         img = data_conversion.topic_to_image(msg)
     elif topic == "/camera/depth/image_raw":
-        depth = data_conversion.topic_to_depth(msg)
+        depth = data_conversion.topic_to_depth(msg,CAMERA_DATA)
         
     if depth is not None and img is not None:
         
@@ -74,7 +80,7 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
         
         # Estimate depth with depth anything
         est_depth = MODEL.infer_image(np.array(img)) # HxW raw depth map in numpy
-        pred_depth, _ = depth_anything_interface.get_pred_depth(depth, est_depth)
+        pred_depth, _ = depth_anything_interface.get_pred_depth(depth, est_depth, CAMERA_DATA)
         depth_anything_depth = data_conversion.interpolate_depth(pred_depth,corners.reshape(-1, 2))
     
         diff_raw = abs(raw_depth - camera_estimated_depth)
