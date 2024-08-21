@@ -52,7 +52,7 @@ def get_model(DEVICE, MODEL_PATH, model_type = "base", encoder='vitl', max_depth
 def estimated_depth_model(x, a, b, c):
     return (a / (x + b)) + c
 
-def get_pred_depth(depth, est_depth, CAMERA_DATA, verbose=False):
+def get_pred_depth(depth, est_depth, CAMERA_DATA, maxfev=1000, verbose=False):
     depth_flatten = depth.flatten()
     est_depth_flatten = est_depth.flatten()
     est_depth_flatten = est_depth_flatten[depth_flatten>=CAMERA_DATA["min_acc_range"]]
@@ -60,7 +60,7 @@ def get_pred_depth(depth, est_depth, CAMERA_DATA, verbose=False):
     est_depth_flatten = est_depth_flatten[depth_flatten<=CAMERA_DATA["max_acc_range"]]
     depth_flatten = depth_flatten[depth_flatten<=CAMERA_DATA["max_acc_range"]]
 
-    popt, pcov = curve_fit(estimated_depth_model, est_depth_flatten, depth_flatten)
+    popt, pcov = curve_fit(estimated_depth_model, est_depth_flatten, depth_flatten, maxfev=maxfev)
     a_opt, b_opt, c_opt = popt
 
     if verbose: print(f"a: {a_opt}, b: {b_opt}, c: {c_opt}")

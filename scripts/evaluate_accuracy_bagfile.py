@@ -15,7 +15,6 @@ CAMERA_JSON = "/scratchdata/gemini_2l.json"
 MODEL_PATH = f"/scratchdata/depth_anything_v2_{ENCODER}.pth"
 with open(CAMERA_JSON, 'r') as f:
     CAMERA_DATA = json.load(f)
-FRAME_INDEX = 0
 SQUARE_SIZE = 24 #mm
 CHECKERBOARD = (8,6)
 DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
@@ -48,7 +47,6 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
         depth = data_conversion.topic_to_depth(msg,CAMERA_DATA)
         
     if depth is not None and img is not None:
-        
         #Estimate gt depth from camera
         
         # Undistort camera
@@ -60,6 +58,7 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
             depth = None
             img = None
             continue
+        
         # Estimate distance via PnP
         objp = np.zeros((CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
         objp[:, :2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
@@ -80,7 +79,8 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
         
         # Estimate depth with depth anything
         est_depth = MODEL.infer_image(np.array(img)) # HxW raw depth map in numpy
-        pred_depth, _ = depth_anything_interface.get_pred_depth(depth, est_depth, CAMERA_DATA)
+        
+        pred_depth, _ = depth_anything_interface.get_pred_depth(depth, est_depth, CAMERA_DATA, maxfev=2000)
         depth_anything_depth = data_conversion.interpolate_depth(pred_depth,corners.reshape(-1, 2))
     
         diff_raw = abs(raw_depth - camera_estimated_depth)
@@ -88,7 +88,7 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
     
         # Store data
         data.append((time.time() - prev_time, diff_raw.mean(), diff_raw.max(), diff_raw.std(), diff_depth_anything.mean(), diff_depth_anything.max(), diff_depth_anything.std()))
-    
+
         depth = None
         img = None
         prev_time = time.time()
