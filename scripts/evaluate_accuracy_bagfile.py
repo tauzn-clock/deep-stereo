@@ -8,7 +8,8 @@ import rosbag
 import custom_utils.data_conversion as data_conversion
 import custom_utils.depth_anything_interface as depth_anything_interface
 
-MODEL_TYPE = "base"
+MODEL_TYPE = "metric"
+DATASET = "hypersim"
 ENCODER = "vitl"
 DATAFILE = "/scratchdata/moving_2L"
 CAMERA_JSON = "/scratchdata/gemini_2l.json"
@@ -80,7 +81,7 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
         # Estimate depth with depth anything
         est_depth = MODEL.infer_image(np.array(img)) # HxW raw depth map in numpy
         
-        pred_depth, _ = depth_anything_interface.get_pred_depth(depth, est_depth, CAMERA_DATA, maxfev=2000)
+        pred_depth, _ = depth_anything_interface.get_pred_depth(depth, est_depth, CAMERA_DATA, depth_anything_interface.estimated_metric_depth_model)
         depth_anything_depth = data_conversion.interpolate_depth(pred_depth,corners.reshape(-1, 2))
     
         diff_raw = abs(raw_depth - camera_estimated_depth)
