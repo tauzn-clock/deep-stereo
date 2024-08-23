@@ -52,8 +52,8 @@ def get_model(DEVICE, MODEL_PATH, model_type = "base", encoder='vitl', max_depth
 def estimated_depth_model(x, a, b, c):
     return (a / (x + b)) + c
 
-def estimated_metric_depth_model(x,a,b):
-    return a * x + b
+def estimated_metric_depth_model(x,a):
+    return a * x 
 
 def get_pred_depth(depth, est_depth, CAMERA_DATA, fit_model, maxfev=1000, verbose=False):
     depth_flatten = depth.flatten()

@@ -13,7 +13,7 @@ DATASET = "hypersim"
 ENCODER = "vitl"
 DATAFILE = "/scratchdata/moving_2L"
 CAMERA_JSON = "/scratchdata/gemini_2l.json"
-MODEL_PATH = f"/scratchdata/depth_anything_v2_{ENCODER}.pth"
+MODEL_PATH = f"/scratchdata/depth_anything_v2_metric_{DATASET}_{ENCODER}.pth"
 with open(CAMERA_JSON, 'r') as f:
     CAMERA_DATA = json.load(f)
 SQUARE_SIZE = 24 #mm
@@ -81,14 +81,14 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
         # Estimate depth with depth anything
         est_depth = MODEL.infer_image(np.array(img)) # HxW raw depth map in numpy
         
-        pred_depth, _ = depth_anything_interface.get_pred_depth(depth, est_depth, CAMERA_DATA, depth_anything_interface.estimated_metric_depth_model)
+        pred_depth, popt = depth_anything_interface.get_pred_depth(depth, est_depth, CAMERA_DATA, depth_anything_interface.estimated_metric_depth_model)
         depth_anything_depth = data_conversion.interpolate_depth(pred_depth,corners.reshape(-1, 2))
     
         diff_raw = abs(raw_depth - camera_estimated_depth)
         diff_depth_anything = abs(depth_anything_depth - camera_estimated_depth)
     
         # Store data
-        data.append((time.time() - prev_time, diff_raw.mean(), diff_raw.max(), diff_raw.std(), diff_depth_anything.mean(), diff_depth_anything.max(), diff_depth_anything.std()))
+        data.append((time.time() - prev_time, diff_raw.mean(), diff_raw.max(), diff_raw.std(), diff_depth_anything.mean(), diff_depth_anything.max(), diff_depth_anything.std(), popt[0]))
 
         depth = None
         img = None
