@@ -11,6 +11,7 @@ import cv2
 import torch
 import numpy as np
 from scipy.optimize import curve_fit
+from sklearn.metrics import r2_score
 
 # These functions aim to fit based on disparity map
 
@@ -69,9 +70,9 @@ def get_pred_depth(depth, est_depth, CAMERA_DATA, fit_model, maxfev=1000, verbos
 
     pred_depth = fit_model(est_depth, *popt)
 
-    # Calcualte r2
-    if verbose:
-        r2 = np.corrcoef(fit_model(est_depth_flatten,*popt), depth_flatten)[0, 1]
-        print(f"R2: {r2}")
+    # TODO: Calcualte r2 
+    #if verbose:
+    #    coefficient_of_dermination = r2_score(depth_flatten, pred_depth)
+    #    print(f"R2: {coefficient_of_dermination}")
     
     return pred_depth, popt

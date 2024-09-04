@@ -36,7 +36,7 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/camera_info"]):
 
 depth = None
 img = None
-prev_time = time.time()
+
 
 # Store accuracy per frame
 data = []
@@ -48,6 +48,7 @@ for topic, msg, t in bag.read_messages(topics=["/camera/color/image_raw", "/came
         depth = data_conversion.topic_to_depth(msg,CAMERA_DATA)
         
     if depth is not None and img is not None:
+        prev_time = time.time()
         #Estimate gt depth from camera
         
         # Undistort camera
